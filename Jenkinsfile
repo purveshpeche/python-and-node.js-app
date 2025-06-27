@@ -7,7 +7,7 @@ pipeline {
 
   environment {
     REGISTRY = "docker.io/purveshpeche"
-    EC2_HOST = "ec2-user@your-ec2-ip"
+    EC2_HOST = "54.175.58.200"
   }
 
   stages {
