@@ -15,7 +15,9 @@ This repository contains dockerized Python Flask and Node.js Express application
 │   ├── package.json       # Node.js dependencies
 │   └── Dockerfile         # Node.js app Dockerfile
 ├── scripts/
-│   ├── build.sh           # Build script
+│   ├── build.dev.sh       # Build script (development)
+│   ├── build.prod.sh      # Build script (production)
+│   ├── build.sh           # (legacy, supports both)
 │   ├── run.sh             # Run script
 │   ├── stop.sh            # Stop script
 │   ├── status.sh          # Status script
@@ -35,16 +37,14 @@ This repository contains dockerized Python Flask and Node.js Express application
 
 ### 1. Build Applications
 
+#### For Development
 ```bash
-# Build all applications for development
-./scripts/build.sh
+./scripts/build.dev.sh
+```
 
-# Build specific application
-./scripts/build.sh python dev
-./scripts/build.sh nodejs prod
-
-# Build all for production
-./scripts/build.sh all prod
+#### For Production
+```bash
+./scripts/build.prod.sh
 ```
 
 ### 2. Run Applications
@@ -113,19 +113,20 @@ docker-compose -f docker-compose.prod.yml up -d --scale python-app=2 --scale nod
 
 ## 📋 Available Scripts
 
-### build.sh
-Builds Docker images for both applications.
+### build.dev.sh
+Builds Docker images for both applications (development mode).
 
 **Usage:**
 ```bash
-./scripts/build.sh [python|nodejs|all] [dev|prod]
+./scripts/build.dev.sh
 ```
 
-**Examples:**
+### build.prod.sh
+Builds Docker images for both applications (production mode).
+
+**Usage:**
 ```bash
-./scripts/build.sh all dev      # Build both apps for development
-./scripts/build.sh python prod  # Build Python app for production
-./scripts/build.sh nodejs dev   # Build Node.js app for development
+./scripts/build.prod.sh
 ```
 
 ### run.sh
@@ -242,7 +243,7 @@ docker stats python-app-dev nodejs-app-dev
 
 1. **Start Development Environment:**
    ```bash
-   ./scripts/build.sh all dev
+   ./scripts/build.dev.sh
    ./scripts/run.sh all dev
    ```
 
@@ -252,7 +253,7 @@ docker stats python-app-dev nodejs-app-dev
 
 3. **Rebuild After Dependency Changes:**
    ```bash
-   ./scripts/build.sh all dev
+   ./scripts/build.dev.sh
    ./scripts/run.sh all dev
    ```
 
@@ -270,7 +271,7 @@ docker stats python-app-dev nodejs-app-dev
 
 1. **Build Production Images:**
    ```bash
-   ./scripts/build.sh all prod
+   ./scripts/build.prod.sh
    ```
 
 2. **Deploy with Docker Compose:**
@@ -324,7 +325,7 @@ docker stats python-app-dev nodejs-app-dev
    ```bash
    # Clean and rebuild
    ./scripts/cleanup.sh images
-   ./scripts/build.sh all dev
+   ./scripts/build.dev.sh
    ```
 
 3. **Health Check Failures:**
@@ -408,4 +409,4 @@ This project is licensed under the MIT License.
 2. Create a feature branch
 3. Make your changes
 4. Test with the provided scripts
-5. Submit a pull request 
+5. Submit a pull request
