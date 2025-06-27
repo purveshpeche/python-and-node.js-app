@@ -8,6 +8,8 @@ pipeline {
   environment {
     REGISTRY = "docker.io/purveshpeche"
     EC2_HOST = "ubuntu@13.222.247.75"
+    PROJECT_DIR = "/home/ubuntu/python-and-node.js-app"
+    GIT_REPO = "git@github.com:purveshpeche/python-and-node.js-app.git"
   }
 
   stages {
@@ -41,17 +43,32 @@ pipeline {
     stage('Deploy on EC2') {
       steps {
         sshagent(['ec2-ssh-key']) {
-          sh '''
-            ssh -o StrictHostKeyChecking=no $EC2_HOST '
-              echo "$DOCKERHUB_PASS" | docker login -u "$DOCKERHUB_USER" --password-stdin
-              docker pull $REGISTRY/python-app:${IMAGE_TAG}
-              docker pull $REGISTRY/nodejs-app:${IMAGE_TAG}
-              cd /home/ubuntu/python-and-node.js-app/ 
-              IMAGE_TAG=${IMAGE_TAG} docker-compose -f docker-compose.prod.yml up -d
-            '
-          '''
+          withCredentials([usernamePassword(credentialsId: 'dockerhub', usernameVariable: 'DOCKERHUB_USER', passwordVariable: 'DOCKERHUB_PASS')]) {
+            sh '''
+              ssh -o StrictHostKeyChecking=no $EC2_HOST '
+                # Clone or pull latest code
+                if [ ! -d "$PROJECT_DIR" ]; then
+                  git clone $GIT_REPO $PROJECT_DIR
+                else
+                  cd $PROJECT_DIR && git pull origin master
+                fi
+
+                # Login to Docker Hub
+                echo "$DOCKERHUB_PASS" | docker login -u "$DOCKERHUB_USER" --password-stdin
+
+                # Pull updated images
+                docker pull $REGISTRY/python-app:${IMAGE_TAG}
+                docker pull $REGISTRY/nodejs-app:${IMAGE_TAG}
+
+                # Run Docker Compose with the new image tag
+                cd $PROJECT_DIR
+                IMAGE_TAG=${IMAGE_TAG} docker compose -f docker-compose.prod.yml up -d
+              '
+            '''
+          }
         }
       }
     }
   }
 }
+
