@@ -3,9 +3,7 @@ version: '3.8'
 services:
   # Python Flask Application (Production)
   python-app:
-    build:
-      context: ./python-app
-      target: production
+    image: docker.io/purveshpeche/python-app:${IMAGE_TAG}
     container_name: python-app-production
     ports:
       - "5000:5000"
@@ -33,9 +31,7 @@ services:
 
   # Node.js Express Application (Production)
   nodejs-app:
-    build:
-      context: ./nodejs-app
-      target: production
+    image: docker.io/purveshpeche/nodejs-app:${IMAGE_TAG}
     container_name: nodejs-app-production
     ports:
       - "3000:3000"
@@ -63,4 +59,4 @@ services:
 
 networks:
   app-network:
-    driver: bridge 
+    driver: bridge
