@@ -49,25 +49,8 @@ pipeline {
       steps {
         sshagent(['ec2-ssh-key']) {
           sh """
-            ssh -o StrictHostKeyChecking=no ${EC2_HOST} << 'EOF'
+            ssh -o StrictHostKeyChecking=no ${EC2_HOST} 'bash -s' <<EOF
               set -e
-              
-              # Remove old repo if it exists
-              rm -rf python-and-node.js-app || true
-              
-              # Clone latest code
-              git clone https://github.com/purveshpeche/python-and-node.js-app.git
-              cd python-and-node.js-app
 
-              # Pull and deploy with the given IMAGE_TAG
-              IMAGE_TAG=${IMAGE_TAG} docker compose -f docker-compose.prod.yml pull
-              IMAGE_TAG=${IMAGE_TAG} docker compose -f docker-compose.prod.yml up -d --remove-orphans
-            EOF
-          """
-        }
-      }
-    }
-
-  }
-}
+              # Remove old repo if it exis
 
