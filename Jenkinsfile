@@ -6,13 +6,14 @@ pipeline {
   }
 
   environment {
-    REGISTRY = "docker.io/purveshpeche"
-    EC2_HOST = "ubuntu@44.201.178.175"
-    PROJECT_DIR = "/home/ubuntu/python-and-node.js-app"
-    GIT_REPO = "git@github.com:purveshpeche/python-and-node.js-app.git"
+    REGISTRY     = "docker.io/purveshpeche"
+    EC2_HOST     = "ubuntu@44.201.178.175"
+    PROJECT_DIR  = "/home/ubuntu/python-and-node.js-app"
+    GIT_REPO     = "git@github.com:purveshpeche/python-and-node.js-app.git"
   }
 
   stages {
+
     stage('Checkout') {
       steps {
         checkout scm
@@ -30,7 +31,11 @@ pipeline {
 
     stage('Push to Docker Hub') {
       steps {
-        withCredentials([usernamePassword(credentialsId: 'dockerhub', usernameVariable: 'DOCKERHUB_USER', passwordVariable: 'DOCKERHUB_PASS')]) {
+        withCredentials([usernamePassword(
+          credentialsId: 'dockerhub',
+          usernameVariable: 'DOCKERHUB_USER',
+          passwordVariable: 'DOCKERHUB_PASS'
+        )]) {
           sh '''
             echo $DOCKERHUB_PASS | docker login -u $DOCKERHUB_USER --password-stdin
             docker push $REGISTRY/python-app:${IMAGE_TAG}
@@ -43,32 +48,26 @@ pipeline {
     stage('Deploy on EC2') {
       steps {
         sshagent(['ec2-ssh-key']) {
-          withCredentials([usernamePassword(credentialsId: 'dockerhub', usernameVariable: 'DOCKERHUB_USER', passwordVariable: 'DOCKERHUB_PASS')]) {
-            sh '''
-              ssh -o StrictHostKeyChecking=no $EC2_HOST '
-                # Clone or pull latest code
-                if [ ! -d "$PROJECT_DIR" ]; then
-                  git clone $GIT_REPO $PROJECT_DIR
-                else
-                  cd $PROJECT_DIR && git pull origin master
-                fi
+          sh """
+            ssh -o StrictHostKeyChecking=no ${EC2_HOST} << 'EOF'
+              set -e
+              
+              # Remove old repo if it exists
+              rm -rf python-and-node.js-app || true
+              
+              # Clone latest code
+              git clone https://github.com/purveshpeche/python-and-node.js-app.git
+              cd python-and-node.js-app
 
-                # Login to Docker Hub
-                echo "$DOCKERHUB_PASS" | docker login -u "$DOCKERHUB_USER" --password-stdin
-
-                # Pull updated images
-                docker pull $REGISTRY/python-app:${IMAGE_TAG}
-                docker pull $REGISTRY/nodejs-app:${IMAGE_TAG}
-
-                # Run Docker Compose with the new image tag
-                cd $PROJECT_DIR
-                IMAGE_TAG=${IMAGE_TAG} docker compose -f docker-compose.prod.yml up -d
-              '
-            '''
-          }
+              # Pull and deploy with the given IMAGE_TAG
+              IMAGE_TAG=${IMAGE_TAG} docker compose -f docker-compose.prod.yml pull
+              IMAGE_TAG=${IMAGE_TAG} docker compose -f docker-compose.prod.yml up -d --remove-orphans
+            EOF
+          """
         }
       }
     }
+
   }
 }
 
