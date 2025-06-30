@@ -7,7 +7,7 @@ pipeline {
 
   environment {
     REGISTRY = "docker.io/purveshpeche"
-    EC2_HOST = "ubuntu@13.222.247.75"
+    EC2_HOST = "ubuntu@44.201.178.175"
     PROJECT_DIR = "/home/ubuntu/python-and-node.js-app"
     GIT_REPO = "git@github.com:purveshpeche/python-and-node.js-app.git"
   }
